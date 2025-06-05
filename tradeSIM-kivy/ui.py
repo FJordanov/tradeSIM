@@ -7,10 +7,14 @@ from kivy.uix.widget import Widget
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.graphics import Color, RoundedRectangle
+import os
+import requests
 
 # Set a fixed window size and background color
 Window.size = (600, 800)
 Window.clearcolor = (0.97, 0.97, 1, 1)  # Light blue/white background
+
+ALPHA_VANTAGE_API_KEY = os.environ.get('ALPHAVANTAGE_API_KEY', '6NMNTRUPGSU4OKBL')
 
 class LoginScreen(Screen):
     def __init__(self, **kwargs):
@@ -263,8 +267,25 @@ class TradingScreen(Screen):
     def search_stock(self, instance):
         query = self.search_input.text.strip()
         self.table.clear_widgets()
-        self.table.add_widget(Label(text=f'Search results for: {query} (Demo)', font_size=18))
-        # ...populate with search results...
+        if not query:
+            self.table.add_widget(Label(text='Please enter a stock symbol.', font_size=18))
+            return
+        # Fetch real-time data from Alpha Vantage
+        url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={query}&apikey={ALPHA_VANTAGE_API_KEY}'
+        try:
+            response = requests.get(url)
+            data = response.json()
+            quote = data.get('Global Quote', {})
+            if not quote:
+                self.table.add_widget(Label(text=f'No data found for: {query}', font_size=18))
+                return
+            symbol = quote.get('01. symbol', query)
+            price = quote.get('05. price', 'N/A')
+            change = quote.get('10. change percent', 'N/A')
+            volume = quote.get('06. volume', 'N/A')
+            self.table.add_widget(Label(text=f'{symbol} | Price: ${price} | Change: {change} | Volume: {volume}', font_size=16))
+        except Exception as e:
+            self.table.add_widget(Label(text=f'API error: {e}', font_size=16))
 
     def populate_table(self):
         self.table.clear_widgets()

@@ -10,7 +10,11 @@ A native Python Android trading simulator using Kivy. Features:
    ```powershell
    pip install kivy
    ```
-2. Run the app:
+2. Set your Alpha Vantage API key as an environment variable (replace with your own key):
+   ```powershell
+   $env:ALPHAVANTAGE_API_KEY = "your-api_key"
+   ```
+3. Run the app:
    ```powershell
    python main.py
    ```
